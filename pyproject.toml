@@ -1,0 +1,14 @@
+[build-system]
+requires=["setuptools>=61"]
+build-backend="setuptools.build_meta"
+
+[project]
+name="paperfig"
+version="0.1.0"
+description="Deterministic Matplotlib layouts for publication figures"
+readme="README.md"
+requires-python=">=3.9"
+dependencies=["matplotlib>=3.5"]
+
+[tool.setuptools.packages.find]
+where=["src"]
