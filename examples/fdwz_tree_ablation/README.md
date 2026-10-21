@@ -1,6 +1,6 @@
 # FDWZ tree ablation example
 
-This example reproduces the MRCZ paper's FDWZ tree-ablation figure with plot-area aspect ratios `(2,1)`.
+This example reproduces the MRCZ paper's FDWZ tree-ablation figure with plot-area aspect ratios `(2.4,1.2)`.
 
 The figure-ready CSV files are compact extracts of the original experiment results:
 

@@ -84,7 +84,7 @@ def make_figure():
     left_axis.get_xticklabels()[0].set_horizontalalignment("left")
     left_axis.get_xticklabels()[-1].set_horizontalalignment("right")
     draw_tree_count_bars(right_axis)
-    layout_panel_row(figure,axes,(2.0,1.0),bottom_pt=30,panel_gap_pt=PANEL_GAP_PT,left_edge_gap_pt=LEFT_EDGE_GAP_PT,right_edge_gap_pt=RIGHT_EDGE_GAP_PT)
+    layout_panel_row(figure,axes,(2.4,1.2),bottom_pt=30,panel_gap_pt=PANEL_GAP_PT,left_edge_gap_pt=LEFT_EDGE_GAP_PT,right_edge_gap_pt=RIGHT_EDGE_GAP_PT)
     legend_above(left_axis,legend_handles,legend_labels,ncol=3,frameon=False,**legend_spacing_kwargs(8))
     for axis in axes:
         axis.set_axisbelow(True)
