@@ -4,7 +4,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedFormatter,FixedLocator
-from paperfig import PaperFigureSpec,add_panel_captions,align_xlabels,apply_paper_style,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import PaperFigureSpec,add_panel_captions,align_xlabels,apply_paper_style,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 example_directory=os.path.dirname(os.path.abspath(__file__))
 tree_count_path=os.path.join(example_directory,"data/tree_count.csv")
@@ -85,7 +85,7 @@ def make_figure():
     left_axis.get_xticklabels()[-1].set_horizontalalignment("right")
     draw_tree_count_bars(right_axis)
     layout_panel_row(figure,axes,panel_aspect_ratios(2,1),bottom_pt=30,panel_gap_pt=PANEL_GAP_PT,left_edge_gap_pt=LEFT_EDGE_GAP_PT,right_edge_gap_pt=RIGHT_EDGE_GAP_PT)
-    legend_above(left_axis,legend_handles,legend_labels,ncol=3,frameon=False,handlelength=1,handletextpad=0.2,columnspacing=0.45)
+    legend_above(left_axis,legend_handles,legend_labels,ncol=3,frameon=False,**legend_spacing_kwargs(8))
     for axis in axes:
         axis.set_axisbelow(True)
         axis.grid(True,linestyle="--",linewidth=0.45,alpha=0.35)

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-from .spec import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_PANEL_ASPECT_RATIO,DEFAULT_PANEL_CAPTION_GAP_PT,DEFAULT_X_LABEL_GAP_PT,MPL_POINTS_PER_INCH
+from .spec import DEFAULT_LEGEND_COLUMN_GAP_PT,DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_HANDLE_TEXT_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_PANEL_ASPECT_RATIO,DEFAULT_PANEL_CAPTION_GAP_PT,DEFAULT_X_LABEL_GAP_PT,MPL_POINTS_PER_INCH
 
 def paper_subplots(spec,nrows=1,ncols=1,left_pt=0,right_pt=0,bottom_pt=0,top_pt=0,column_gap_pt=0,row_gap_pt=0,width_ratios=None,height_ratios=None,squeeze=True):
     axes_width_pt=spec.width_pt-left_pt-right_pt-(ncols-1)*column_gap_pt
@@ -18,6 +18,10 @@ def paper_subplots(spec,nrows=1,ncols=1,left_pt=0,right_pt=0,bottom_pt=0,top_pt=
 def _legend_font_size_pt(kwargs):
     font_size=kwargs.get("fontsize",plt.rcParams["legend.fontsize"])
     return FontProperties(size=font_size).get_size_in_points()
+
+def legend_spacing_kwargs(handle_width_pt,font_size_pt=None,handle_text_gap_pt=DEFAULT_LEGEND_HANDLE_TEXT_GAP_PT,column_gap_pt=DEFAULT_LEGEND_COLUMN_GAP_PT):
+    if font_size_pt is None:font_size_pt=FontProperties(size=plt.rcParams["legend.fontsize"]).get_size_in_points()
+    return {"handlelength":handle_width_pt/font_size_pt,"handletextpad":handle_text_gap_pt/font_size_pt,"columnspacing":column_gap_pt/font_size_pt}
 
 def _visible_legend_row_gap_pt(legend):
     legend.figure.canvas.draw()

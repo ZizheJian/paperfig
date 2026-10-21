@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-from paperfig import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_X_LABEL_GAP_PT,DEFAULT_X_TICK_GAP_PT,DEFAULT_Y_LABEL_GAP_PT,DEFAULT_Y_TICK_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import DEFAULT_LEGEND_COLUMN_GAP_PT,DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_HANDLE_TEXT_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_X_LABEL_GAP_PT,DEFAULT_X_TICK_GAP_PT,DEFAULT_Y_LABEL_GAP_PT,DEFAULT_Y_TICK_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 class GeometryTest(unittest.TestCase):
     def test_default_panel_spans(self):
@@ -60,6 +60,12 @@ class GeometryTest(unittest.TestCase):
         self.assertAlmostEqual(legend_gap_pt,DEFAULT_LEGEND_GAP_PT,places=10)
         self.assertAlmostEqual(row_gap_pt,DEFAULT_LEGEND_ROW_GAP_PT,places=10)
         plt.close(figure)
+
+    def test_legend_spacing_converts_points_to_font_units(self):
+        spacing=legend_spacing_kwargs(8,font_size_pt=8)
+        self.assertEqual(spacing["handlelength"],1)
+        self.assertEqual(spacing["handletextpad"],DEFAULT_LEGEND_HANDLE_TEXT_GAP_PT/8)
+        self.assertEqual(spacing["columnspacing"],DEFAULT_LEGEND_COLUMN_GAP_PT/8)
 
     def test_default_tick_gaps_use_physical_points(self):
         apply_paper_style()
