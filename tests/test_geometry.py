@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-from paperfig import PaperFigureSpec,apply_paper_style,layout_panel_row,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 class GeometryTest(unittest.TestCase):
     def test_default_panel_spans(self):
@@ -40,6 +40,23 @@ class GeometryTest(unittest.TestCase):
             visible_rows=(image[:,:,:3]<0.98).any(axis=2).any(axis=1).nonzero()[0]
             self.assertGreaterEqual(visible_rows[0],8)
             self.assertLessEqual(visible_rows[-1],image.shape[0]-9)
+        plt.close(figure)
+
+    def test_default_legend_gaps_use_physical_points(self):
+        apply_paper_style()
+        figure,axis=plt.subplots(figsize=(4,4),dpi=300)
+        axis.plot([0,1],[0,1],label="First")
+        axis.plot([0,1],[1,0],label="Second")
+        legend=legend_above(axis,ncol=1,frameon=False)
+        figure.canvas.draw()
+        renderer=figure.canvas.get_renderer()
+        axis_bbox=axis.get_window_extent(renderer)
+        legend_bbox=legend.get_window_extent(renderer)
+        legend_gap_pt=(legend_bbox.y0-axis_bbox.y1)*MPL_POINTS_PER_INCH/figure.dpi
+        text_bboxes=[text.get_window_extent(renderer) for text in legend.get_texts()]
+        row_gap_pt=(text_bboxes[0].y0-text_bboxes[1].y1)*MPL_POINTS_PER_INCH/figure.dpi
+        self.assertAlmostEqual(legend_gap_pt,DEFAULT_LEGEND_GAP_PT,places=10)
+        self.assertAlmostEqual(row_gap_pt,DEFAULT_LEGEND_ROW_GAP_PT,places=10)
         plt.close(figure)
 
 if __name__=="__main__":unittest.main()

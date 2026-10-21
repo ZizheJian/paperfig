@@ -9,10 +9,12 @@
 - IEEE-style column width: 252 TeX pt.
 - IEEE-style text width: 516 TeX pt.
 - One panel slot has a plot-area width-to-height ratio of `sqrt(2)`.
+- The default gap from a legend to its plot area is 1 pt, and the default gap between legend rows is 1 pt.
 - A normal three-panel row uses spans `(1,1,1)`.
 - A panel occupying two slots beside a one-slot panel uses spans `(2,1)`, producing aspect ratios `(2*sqrt(2),sqrt(2))`.
 - The provisional canvas is square. Export keeps its full fixed width and crops only the top and bottom.
 - Distances are measured from rendered artist bounding boxes, so ordinary decimals and math-text tick labels are handled consistently.
+- `set_legend_row_gap` applies the same measured row spacing to legends created directly with Matplotlib.
 
 ## Installation
 

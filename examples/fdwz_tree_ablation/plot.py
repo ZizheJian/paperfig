@@ -19,7 +19,6 @@ PANEL_GAP_PT=9.0
 LEFT_EDGE_GAP_PT=3.0
 RIGHT_EDGE_GAP_PT=3.0
 PANEL_CAPTION_GAP_PT=2.0
-LEGEND_GAP_PT=0.0
 VERTICAL_EDGE_GAP_PT=3.0
 
 tree_colors=["#000000","#0072B2","#D55E00","#009E73","#CC79A7"]
@@ -86,7 +85,7 @@ def make_figure():
     left_axis.get_xticklabels()[-1].set_horizontalalignment("right")
     draw_tree_count_bars(right_axis)
     layout_panel_row(figure,axes,panel_aspect_ratios(2,1),bottom_pt=30,panel_gap_pt=PANEL_GAP_PT,left_edge_gap_pt=LEFT_EDGE_GAP_PT,right_edge_gap_pt=RIGHT_EDGE_GAP_PT)
-    legend_above(left_axis,legend_handles,legend_labels,gap_pt=LEGEND_GAP_PT,ncol=3,frameon=False,borderpad=0,handlelength=1,handletextpad=0.2,columnspacing=0.45,labelspacing=0.05)
+    legend_above(left_axis,legend_handles,legend_labels,ncol=3,frameon=False,handlelength=1,handletextpad=0.2,columnspacing=0.45)
     for axis in axes:
         axis.set_axisbelow(True)
         axis.grid(True,linestyle="--",linewidth=0.45,alpha=0.35)

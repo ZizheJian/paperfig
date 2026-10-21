@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-from .spec import DEFAULT_PANEL_ASPECT_RATIO,MPL_POINTS_PER_INCH
+from matplotlib.font_manager import FontProperties
+from .spec import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_PANEL_ASPECT_RATIO,MPL_POINTS_PER_INCH
 
 def paper_subplots(spec,nrows=1,ncols=1,left_pt=0,right_pt=0,bottom_pt=0,top_pt=0,column_gap_pt=0,row_gap_pt=0,width_ratios=None,height_ratios=None,squeeze=True):
     axes_width_pt=spec.width_pt-left_pt-right_pt-(ncols-1)*column_gap_pt
@@ -14,12 +15,42 @@ def paper_subplots(spec,nrows=1,ncols=1,left_pt=0,right_pt=0,bottom_pt=0,top_pt=
     figure.subplots_adjust(left=left_pt/spec.width_pt,right=1-right_pt/spec.width_pt,bottom=bottom_pt/spec.height_pt,top=1-top_pt/spec.height_pt,wspace=wspace,hspace=hspace)
     return figure,axes
 
-def legend_above(axis,*args,gap_pt=2,**kwargs):
+def _legend_font_size_pt(kwargs):
+    font_size=kwargs.get("fontsize",plt.rcParams["legend.fontsize"])
+    return FontProperties(size=font_size).get_size_in_points()
+
+def _visible_legend_row_gap_pt(legend):
+    legend.figure.canvas.draw()
+    renderer=legend.figure.canvas.get_renderer()
+    bboxes=[text.get_window_extent(renderer) for text in legend.get_texts() if text.get_visible() and text.get_text()]
+    rows=[]
+    for bbox in sorted(bboxes,key=lambda item:item.y0,reverse=True):
+        center=(bbox.y0+bbox.y1)/2
+        if not rows or abs(center-rows[-1][0])>0.5:rows.append([center,[bbox]])
+        else:rows[-1][1].append(bbox)
+    if len(rows)<2:return None
+    gaps=[min(bbox.y0 for bbox in upper[1])-max(bbox.y1 for bbox in lower[1]) for upper,lower in zip(rows,rows[1:])]
+    return min(gaps)*MPL_POINTS_PER_INCH/legend.figure.dpi
+
+def set_legend_row_gap(legend,row_gap_pt=DEFAULT_LEGEND_ROW_GAP_PT):
+    visible_gap_pt=_visible_legend_row_gap_pt(legend)
+    if visible_gap_pt is None:return legend
+    correction_pt=row_gap_pt-visible_gap_pt
+    for column in legend._legend_handle_box.get_children():
+        if hasattr(column,"sep"):column.sep+=correction_pt
+    legend.figure.canvas.draw()
+    return legend
+
+def legend_above(axis,*args,gap_pt=DEFAULT_LEGEND_GAP_PT,row_gap_pt=DEFAULT_LEGEND_ROW_GAP_PT,**kwargs):
     axes_height_pt=axis.get_position().height*axis.figure.get_figheight()*MPL_POINTS_PER_INCH
     kwargs.setdefault("loc","lower center")
     kwargs.setdefault("bbox_to_anchor",(0.5,1+gap_pt/axes_height_pt))
     kwargs.setdefault("borderaxespad",0)
-    return axis.legend(*args,**kwargs)
+    kwargs.setdefault("borderpad",0)
+    font_size_pt=_legend_font_size_pt(kwargs)
+    kwargs["labelspacing"]=row_gap_pt/font_size_pt
+    legend=axis.legend(*args,**kwargs)
+    return set_legend_row_gap(legend,row_gap_pt)
 
 def _flatten_axes(axes):
     if hasattr(axes,"flat"):return list(axes.flat)

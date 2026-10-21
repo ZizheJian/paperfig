@@ -9,6 +9,7 @@
 - Preserve the full horizontal canvas so LaTeX scaling does not change the font size.
 - Crop only vertical whitespace with `save_paper_png_vertical_crop`.
 - Specify tick, label, caption, legend, panel, and outer-edge distances in points.
+- Use 1 pt for the default legend-to-plot and legend-row gaps.
 - Keep data loading and domain-specific labels, colors, and plotting logic in the parent project.
 - Do not use `bbox_inches="tight"` for final paper figures because it can change the exported width.
 - Run the geometry tests after changing layout code.
