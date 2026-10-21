@@ -1,6 +1,6 @@
 # paperfig
 
-`paperfig` provides deterministic Matplotlib layouts for publication figures. It keeps the final paper width and font size fixed, lays out panels in physical points, renders once to measure the actual text, and crops only the vertical whitespace when exporting a 300 dpi PNG.
+`paperfig` provides deterministic Matplotlib layouts for publication figures. It keeps the final paper width and font size fixed, lays out panel rows and grids in physical points, renders once to measure the actual text, and crops only the vertical whitespace when exporting a 300 dpi PNG.
 
 ## Conventions
 

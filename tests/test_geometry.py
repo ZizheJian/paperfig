@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-from paperfig import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 class GeometryTest(unittest.TestCase):
     def test_default_panel_spans(self):
@@ -57,6 +57,27 @@ class GeometryTest(unittest.TestCase):
         row_gap_pt=(text_bboxes[0].y0-text_bboxes[1].y1)*MPL_POINTS_PER_INCH/figure.dpi
         self.assertAlmostEqual(legend_gap_pt,DEFAULT_LEGEND_GAP_PT,places=10)
         self.assertAlmostEqual(row_gap_pt,DEFAULT_LEGEND_ROW_GAP_PT,places=10)
+        plt.close(figure)
+
+    def test_grid_layout_preserves_every_panel_ratio(self):
+        apply_paper_style()
+        spec=PaperFigureSpec.text(1,width_fraction=5/6)
+        figure,axes=plt.subplots(2,5,figsize=spec.size_in,dpi=spec.dpi)
+        for index,axis in enumerate(axes.flat):
+            axis.plot([0,1],[0,1])
+            axis.set_xlabel(f"({chr(ord('a')+index)}) Panel")
+            style_plot_axis(axis,x_tick_pad=1.5,y_tick_pad=1,x_label_pad=1)
+        ratios=panel_aspect_ratios(1,1,1,1,1)
+        layout_panel_grid(figure,axes,ratios,bottom_pt=30,column_gap_pt=4,row_content_gap_pt=6,left_edge_gap_pt=12,right_edge_gap_pt=3)
+        figure.canvas.draw()
+        renderer=figure.canvas.get_renderer()
+        for axis in axes.flat:
+            bbox=axis.get_window_extent(renderer)
+            self.assertAlmostEqual(bbox.width/bbox.height,math.sqrt(2),places=10)
+        top_caption_bottom=min(axis.xaxis.label.get_window_extent(renderer).y0 for axis in axes[0,:])
+        lower_plot_top=max(axis.get_window_extent(renderer).y1 for axis in axes[1,:])
+        content_gap_pt=(top_caption_bottom-lower_plot_top)*MPL_POINTS_PER_INCH/figure.dpi
+        self.assertAlmostEqual(content_gap_pt,6,places=10)
         plt.close(figure)
 
 if __name__=="__main__":unittest.main()

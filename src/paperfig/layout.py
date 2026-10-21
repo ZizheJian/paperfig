@@ -94,6 +94,69 @@ def layout_panel_row(figure,axes,aspect_ratios,bottom_pt,panel_gap_pt,left_edge_
             if index<len(axes)-1:left_pt+=panel_gap_pt
     return plot_height_pt
 
+def _axes_rows(axes):
+    if hasattr(axes,"shape") and len(axes.shape)==2:return [[axes[row,column] for column in range(axes.shape[1])] for row in range(axes.shape[0])]
+    rows=[list(row) for row in axes]
+    if not rows or not rows[0] or any(len(row)!=len(rows[0]) for row in rows):raise ValueError("Panel grid must contain equally sized nonempty rows")
+    return rows
+
+def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_content_gap_pt,left_edge_gap_pt,right_edge_gap_pt):
+    rows=_axes_rows(axes)
+    if len(rows[0])!=len(aspect_ratios):raise ValueError("Each grid column needs exactly one plot-area aspect ratio")
+    figure_width_pt=figure.get_figwidth()*MPL_POINTS_PER_INCH
+    figure_height_pt=figure.get_figheight()*MPL_POINTS_PER_INCH
+    for _ in range(2):
+        figure.canvas.draw()
+        renderer=figure.canvas.get_renderer()
+        decoration_widths=[]
+        right_decoration_width_pt=0
+        for column in range(len(rows[0])):
+            column_left_width_pt=0
+            for row in rows:
+                axis=row[column]
+                axis_bbox=axis.get_window_extent(renderer)
+                candidates=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)+_visible_bboxes(axis.get_yticklabels(which="both"),renderer)
+                if axis.yaxis.label.get_text():candidates.append(axis.yaxis.label.get_window_extent(renderer))
+                leftmost=min((bbox.x0 for bbox in candidates),default=axis_bbox.x0)
+                column_left_width_pt=max(column_left_width_pt,max(0,(axis_bbox.x0-leftmost)*MPL_POINTS_PER_INCH/figure.dpi))
+                if column==len(rows[0])-1:
+                    rightmost=max((bbox.x1 for bbox in candidates),default=axis_bbox.x1)
+                    right_decoration_width_pt=max(right_decoration_width_pt,max(0,(rightmost-axis_bbox.x1)*MPL_POINTS_PER_INCH/figure.dpi))
+            decoration_widths.append(column_left_width_pt)
+        available_width_pt=figure_width_pt-left_edge_gap_pt-right_edge_gap_pt-sum(decoration_widths)-right_decoration_width_pt-(len(rows[0])-1)*column_gap_pt
+        plot_height_pt=available_width_pt/sum(aspect_ratios)
+        if plot_height_pt<=0:raise ValueError("Panel decorations and gaps leave no width for plot areas")
+        left_pt=left_edge_gap_pt
+        for column,(aspect_ratio,decoration_width_pt) in enumerate(zip(aspect_ratios,decoration_widths)):
+            left_pt+=decoration_width_pt
+            plot_width_pt=plot_height_pt*aspect_ratio
+            for row_index,row in enumerate(rows):
+                provisional_bottom_pt=bottom_pt+(len(rows)-1-row_index)*(plot_height_pt+40)
+                row[column].set_position([left_pt/figure_width_pt,provisional_bottom_pt/figure_height_pt,plot_width_pt/figure_width_pt,plot_height_pt/figure_height_pt])
+            left_pt+=plot_width_pt
+            if column<len(rows[0])-1:left_pt+=column_gap_pt
+    figure.canvas.draw()
+    renderer=figure.canvas.get_renderer()
+    below_heights_pt=[]
+    for row in rows:
+        row_height_pt=0
+        for axis in row:
+            axis_bbox=axis.get_window_extent(renderer)
+            candidates=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)
+            if axis.xaxis.label.get_text():candidates.append(axis.xaxis.label.get_window_extent(renderer))
+            bottom=min((bbox.y0 for bbox in candidates),default=axis_bbox.y0)
+            row_height_pt=max(row_height_pt,(axis_bbox.y0-bottom)*MPL_POINTS_PER_INCH/figure.dpi)
+        below_heights_pt.append(row_height_pt)
+    row_bottoms_pt=[0.0]*len(rows)
+    row_bottoms_pt[-1]=bottom_pt
+    for row_index in range(len(rows)-2,-1,-1):row_bottoms_pt[row_index]=row_bottoms_pt[row_index+1]+plot_height_pt+row_content_gap_pt+below_heights_pt[row_index]
+    for row_index,row in enumerate(rows):
+        for axis in row:
+            position=axis.get_position()
+            axis.set_position([position.x0,row_bottoms_pt[row_index]/figure_height_pt,position.width,plot_height_pt/figure_height_pt])
+    figure.canvas.draw()
+    return plot_height_pt
+
 def _x_tick_bottom(axis,renderer):
     bboxes=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)
     if not bboxes:raise ValueError("Cannot place a bottom row below an axis without visible x tick labels")
