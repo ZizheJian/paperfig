@@ -60,6 +60,13 @@ def _flatten_axes(axes):
 def _visible_bboxes(artists,renderer):
     return [artist.get_window_extent(renderer) for artist in artists if artist.get_visible() and artist.get_text()]
 
+def _visible_tick_bboxes(axis,renderer,direction):
+    axis_bbox=axis.get_window_extent(renderer)
+    artists=axis.get_xticklabels(which="both") if direction=="x" else axis.get_yticklabels(which="both")
+    bboxes=_visible_bboxes(artists,renderer)
+    if direction=="x":return [bbox for bbox in bboxes if bbox.x1>=axis_bbox.x0 and bbox.x0<=axis_bbox.x1]
+    return [bbox for bbox in bboxes if bbox.y1>=axis_bbox.y0 and bbox.y0<=axis_bbox.y1]
+
 def panel_aspect_ratios(*spans,unit_aspect_ratio=DEFAULT_PANEL_ASPECT_RATIO):
     if not spans or any(span<=0 for span in spans):raise ValueError("Panel spans must be positive")
     return tuple(span*unit_aspect_ratio for span in spans)
@@ -69,14 +76,14 @@ def layout_panel_row(figure,axes,aspect_ratios,bottom_pt,panel_gap_pt,left_edge_
     if len(axes)!=len(aspect_ratios):raise ValueError("Each panel needs exactly one plot-area aspect ratio")
     figure_width_pt=figure.get_figwidth()*MPL_POINTS_PER_INCH
     figure_height_pt=figure.get_figheight()*MPL_POINTS_PER_INCH
-    for _ in range(2):
+    for _ in range(3):
         figure.canvas.draw()
         renderer=figure.canvas.get_renderer()
         decoration_widths=[]
         right_decoration_width_pt=0
         for axis in axes:
             axis_bbox=axis.get_window_extent(renderer)
-            candidates=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)+_visible_bboxes(axis.get_yticklabels(which="both"),renderer)
+            candidates=_visible_tick_bboxes(axis,renderer,"x")+_visible_tick_bboxes(axis,renderer,"y")
             if axis.xaxis.label.get_text():candidates.append(axis.xaxis.label.get_window_extent(renderer))
             if axis.yaxis.label.get_text():candidates.append(axis.yaxis.label.get_window_extent(renderer))
             leftmost=min((bbox.x0 for bbox in candidates),default=axis_bbox.x0)
@@ -105,7 +112,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
     if len(rows[0])!=len(aspect_ratios):raise ValueError("Each grid column needs exactly one plot-area aspect ratio")
     figure_width_pt=figure.get_figwidth()*MPL_POINTS_PER_INCH
     figure_height_pt=figure.get_figheight()*MPL_POINTS_PER_INCH
-    for _ in range(2):
+    for _ in range(3):
         figure.canvas.draw()
         renderer=figure.canvas.get_renderer()
         decoration_widths=[]
@@ -115,7 +122,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
             for row in rows:
                 axis=row[column]
                 axis_bbox=axis.get_window_extent(renderer)
-                candidates=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)+_visible_bboxes(axis.get_yticklabels(which="both"),renderer)
+                candidates=_visible_tick_bboxes(axis,renderer,"x")+_visible_tick_bboxes(axis,renderer,"y")
                 if axis.yaxis.label.get_text():candidates.append(axis.yaxis.label.get_window_extent(renderer))
                 leftmost=min((bbox.x0 for bbox in candidates),default=axis_bbox.x0)
                 column_left_width_pt=max(column_left_width_pt,max(0,(axis_bbox.x0-leftmost)*MPL_POINTS_PER_INCH/figure.dpi))
@@ -142,7 +149,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
         row_height_pt=0
         for axis in row:
             axis_bbox=axis.get_window_extent(renderer)
-            candidates=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)
+            candidates=_visible_tick_bboxes(axis,renderer,"x")
             if axis.xaxis.label.get_text():candidates.append(axis.xaxis.label.get_window_extent(renderer))
             bottom=min((bbox.y0 for bbox in candidates),default=axis_bbox.y0)
             row_height_pt=max(row_height_pt,(axis_bbox.y0-bottom)*MPL_POINTS_PER_INCH/figure.dpi)
@@ -158,7 +165,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
     return plot_height_pt
 
 def _x_tick_bottom(axis,renderer):
-    bboxes=_visible_bboxes(axis.get_xticklabels(which="both"),renderer)
+    bboxes=_visible_tick_bboxes(axis,renderer,"x")
     if not bboxes:raise ValueError("Cannot place a bottom row below an axis without visible x tick labels")
     return min(bbox.y0 for bbox in bboxes)
 
@@ -182,7 +189,7 @@ def add_panel_captions(figure,axes,texts,gap_pt=DEFAULT_PANEL_CAPTION_GAP_PT,sou
     figure.canvas.draw()
     renderer=figure.canvas.get_renderer()
     if source=="xlabel":source_bboxes=[axis.xaxis.label.get_window_extent(renderer) for axis in axes]
-    elif source=="ticks":source_bboxes=[min(_visible_bboxes(axis.get_xticklabels(which="both"),renderer),key=lambda bbox:bbox.y0) for axis in axes]
+    elif source=="ticks":source_bboxes=[min(_visible_tick_bboxes(axis,renderer,"x"),key=lambda bbox:bbox.y0) for axis in axes]
     else:raise ValueError(f"Unknown panel-caption source: {source}")
     row_top=min(bbox.y0 for bbox in source_bboxes)-gap_pt*figure.dpi/MPL_POINTS_PER_INCH
     row_top_figure=figure.transFigure.inverted().transform((0,row_top))[1]

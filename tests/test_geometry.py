@@ -20,6 +20,8 @@ class GeometryTest(unittest.TestCase):
         figure,axes=plt.subplots(1,2,figsize=spec.size_in,dpi=spec.dpi)
         for axis in axes:
             axis.plot([0,1],[0,1])
+            axis.set_xticks([-1,0,1,2])
+            axis.set_xlim(0,1)
             axis.set_xlabel("x")
             axis.set_ylabel("y")
             style_plot_axis(axis,x_tick_pad=1.5,y_tick_pad=1,x_label_pad=1,y_label_pad=1)

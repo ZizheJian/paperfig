@@ -2,21 +2,32 @@ import math
 from matplotlib.transforms import Bbox
 from .spec import MPL_POINTS_PER_INCH
 
+def _visible_tick_labels(axis,renderer,direction):
+    axis_bbox=axis.get_window_extent(renderer)
+    artists=axis.get_xticklabels(which="both") if direction=="x" else axis.get_yticklabels(which="both")
+    visible=[]
+    for artist in artists:
+        if not artist.get_visible() or not artist.get_text():continue
+        bbox=artist.get_window_extent(renderer)
+        intersects=bbox.x1>=axis_bbox.x0 and bbox.x0<=axis_bbox.x1 if direction=="x" else bbox.y1>=axis_bbox.y0 and bbox.y0<=axis_bbox.y1
+        if intersects:visible.append(artist)
+    return visible
+
 def validate_figure_bounds(figure,tolerance_px=0.5):
     figure.canvas.draw()
     renderer=figure.canvas.get_renderer()
     artists=list(figure.texts)+list(figure.legends)
     for axis in figure.axes:
         artists.extend([axis.xaxis.label,axis.yaxis.label,axis.title])
-        artists.extend(axis.get_xticklabels(which="both"))
-        artists.extend(axis.get_yticklabels(which="both"))
+        artists.extend(_visible_tick_labels(axis,renderer,"x"))
+        artists.extend(_visible_tick_labels(axis,renderer,"y"))
         if axis.get_legend() is not None:artists.append(axis.get_legend())
     for artist in artists:
         if not artist.get_visible():continue
         bbox=artist.get_window_extent(renderer)
         if bbox.x0<-tolerance_px or bbox.y0<-tolerance_px or bbox.x1>figure.bbox.x1+tolerance_px or bbox.y1>figure.bbox.y1+tolerance_px:
             description=artist.get_text() if hasattr(artist,"get_text") else artist.__class__.__name__
-            raise ValueError(f"Figure decoration exceeds canvas: {description}")
+            raise ValueError(f"Figure decoration exceeds canvas: {description}; artist=({bbox.x0},{bbox.y0},{bbox.x1},{bbox.y1}); figure=({figure.bbox.x0},{figure.bbox.y0},{figure.bbox.x1},{figure.bbox.y1})")
 
 def save_paper_png(figure,path,spec):
     figure.set_size_inches(*spec.size_in,forward=True)
@@ -30,8 +41,8 @@ def save_paper_png_vertical_crop(figure,path,spec,edge_gap_pt=0):
     content_bboxes=[axis.get_tightbbox(renderer) for axis in figure.axes]
     for axis in figure.axes:
         content_bboxes.extend([axis.get_window_extent(renderer),axis.xaxis.label.get_window_extent(renderer),axis.yaxis.label.get_window_extent(renderer),axis.title.get_window_extent(renderer)])
-        content_bboxes.extend(label.get_window_extent(renderer) for label in axis.get_xticklabels(which="both") if label.get_visible() and label.get_text())
-        content_bboxes.extend(label.get_window_extent(renderer) for label in axis.get_yticklabels(which="both") if label.get_visible() and label.get_text())
+        content_bboxes.extend(label.get_window_extent(renderer) for label in _visible_tick_labels(axis,renderer,"x"))
+        content_bboxes.extend(label.get_window_extent(renderer) for label in _visible_tick_labels(axis,renderer,"y"))
         if axis.get_legend() is not None:content_bboxes.append(axis.get_legend().get_window_extent(renderer))
     content_bboxes.extend(text.get_window_extent(renderer) for text in figure.texts if text.get_visible() and text.get_text())
     content_bboxes.extend(legend.get_window_extent(renderer) for legend in figure.legends if legend.get_visible())
