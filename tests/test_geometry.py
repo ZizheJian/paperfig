@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-from paperfig import DEFAULT_LEGEND_COLUMN_GAP_PT,DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_HANDLE_TEXT_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_X_LABEL_GAP_PT,DEFAULT_X_TICK_GAP_PT,DEFAULT_Y_LABEL_GAP_PT,DEFAULT_Y_TICK_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import DEFAULT_LEGEND_COLUMN_GAP_PT,DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_HANDLE_TEXT_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_LOG_X_TICK_GAP_PT,DEFAULT_X_LABEL_GAP_PT,DEFAULT_X_TICK_GAP_PT,DEFAULT_Y_LABEL_GAP_PT,DEFAULT_Y_TICK_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 class GeometryTest(unittest.TestCase):
     def test_default_panel_spans(self):
@@ -91,6 +91,20 @@ class GeometryTest(unittest.TestCase):
         y_label_gap_pt=(min(bbox.x0 for bbox in y_bboxes)-y_label_bbox.x1)*MPL_POINTS_PER_INCH/figure.dpi
         self.assertAlmostEqual(x_label_gap_pt,DEFAULT_X_LABEL_GAP_PT,places=10)
         self.assertAlmostEqual(y_label_gap_pt,DEFAULT_Y_LABEL_GAP_PT,places=10)
+        plt.close(figure)
+
+    def test_log_x_tick_gap_accounts_for_exponents(self):
+        apply_paper_style()
+        figure,axis=plt.subplots(figsize=(4,4),dpi=300)
+        axis.set_xscale("log")
+        axis.set_xlim(0.1,10)
+        style_plot_axis(axis)
+        figure.canvas.draw()
+        renderer=figure.canvas.get_renderer()
+        axis_bbox=axis.get_window_extent(renderer)
+        x_bboxes=[label.get_window_extent(renderer) for label in axis.get_xticklabels() if label.get_visible() and label.get_text()]
+        x_gap_pt=(axis_bbox.y0-max(bbox.y1 for bbox in x_bboxes))*MPL_POINTS_PER_INCH/figure.dpi
+        self.assertAlmostEqual(x_gap_pt,DEFAULT_LOG_X_TICK_GAP_PT,places=10)
         plt.close(figure)
 
     def test_grid_layout_preserves_every_panel_ratio(self):
