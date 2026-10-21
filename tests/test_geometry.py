@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-from paperfig import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_X_TICK_GAP_PT,DEFAULT_Y_TICK_GAP_PT,MPL_POINTS_PER_INCH,PaperFigureSpec,apply_paper_style,layout_panel_grid,layout_panel_row,legend_above,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 class GeometryTest(unittest.TestCase):
     def test_default_panel_spans(self):
@@ -57,6 +57,22 @@ class GeometryTest(unittest.TestCase):
         row_gap_pt=(text_bboxes[0].y0-text_bboxes[1].y1)*MPL_POINTS_PER_INCH/figure.dpi
         self.assertAlmostEqual(legend_gap_pt,DEFAULT_LEGEND_GAP_PT,places=10)
         self.assertAlmostEqual(row_gap_pt,DEFAULT_LEGEND_ROW_GAP_PT,places=10)
+        plt.close(figure)
+
+    def test_default_tick_gaps_use_physical_points(self):
+        apply_paper_style()
+        figure,axis=plt.subplots(figsize=(4,4),dpi=300)
+        axis.plot([0,1],[0,1])
+        style_plot_axis(axis)
+        figure.canvas.draw()
+        renderer=figure.canvas.get_renderer()
+        axis_bbox=axis.get_window_extent(renderer)
+        x_bboxes=[label.get_window_extent(renderer) for label in axis.get_xticklabels() if label.get_visible() and label.get_text()]
+        y_bboxes=[label.get_window_extent(renderer) for label in axis.get_yticklabels() if label.get_visible() and label.get_text()]
+        x_gap_pt=(axis_bbox.y0-max(bbox.y1 for bbox in x_bboxes))*MPL_POINTS_PER_INCH/figure.dpi
+        y_gap_pt=(axis_bbox.x0-max(bbox.x1 for bbox in y_bboxes))*MPL_POINTS_PER_INCH/figure.dpi
+        self.assertAlmostEqual(x_gap_pt,DEFAULT_X_TICK_GAP_PT,places=10)
+        self.assertAlmostEqual(y_gap_pt,DEFAULT_Y_TICK_GAP_PT,places=10)
         plt.close(figure)
 
     def test_grid_layout_preserves_every_panel_ratio(self):
