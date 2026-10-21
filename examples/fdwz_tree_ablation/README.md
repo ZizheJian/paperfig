@@ -1,6 +1,6 @@
 # FDWZ tree ablation example
 
-This example reproduces the MRCZ paper's FDWZ tree-ablation figure with one two-slot panel and one one-slot panel. The plot-area spans `(2,1)` map to aspect ratios `(2*sqrt(2),sqrt(2))`.
+This example reproduces the MRCZ paper's FDWZ tree-ablation figure with plot-area aspect ratios `(2,1)`.
 
 The figure-ready CSV files are compact extracts of the original experiment results:
 
