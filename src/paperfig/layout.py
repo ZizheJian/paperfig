@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-from .spec import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_PANEL_ASPECT_RATIO,MPL_POINTS_PER_INCH
+from .spec import DEFAULT_LEGEND_GAP_PT,DEFAULT_LEGEND_ROW_GAP_PT,DEFAULT_PANEL_ASPECT_RATIO,DEFAULT_PANEL_CAPTION_GAP_PT,DEFAULT_X_LABEL_GAP_PT,MPL_POINTS_PER_INCH
 
 def paper_subplots(spec,nrows=1,ncols=1,left_pt=0,right_pt=0,bottom_pt=0,top_pt=0,column_gap_pt=0,row_gap_pt=0,width_ratios=None,height_ratios=None,squeeze=True):
     axes_width_pt=spec.width_pt-left_pt-right_pt-(ncols-1)*column_gap_pt
@@ -162,7 +162,7 @@ def _x_tick_bottom(axis,renderer):
     if not bboxes:raise ValueError("Cannot place a bottom row below an axis without visible x tick labels")
     return min(bbox.y0 for bbox in bboxes)
 
-def align_xlabels(figure,axes,gap_pt=2):
+def align_xlabels(figure,axes,gap_pt=DEFAULT_X_LABEL_GAP_PT):
     axes=_flatten_axes(axes)
     figure.canvas.draw()
     renderer=figure.canvas.get_renderer()
@@ -176,7 +176,7 @@ def align_xlabels(figure,axes,gap_pt=2):
         axis.xaxis.set_label_coords((position.x0+position.x1)/2,row_top_figure,transform=figure.transFigure)
     figure.canvas.draw()
 
-def add_panel_captions(figure,axes,texts,gap_pt=2,source="xlabel",**kwargs):
+def add_panel_captions(figure,axes,texts,gap_pt=DEFAULT_PANEL_CAPTION_GAP_PT,source="xlabel",**kwargs):
     axes=_flatten_axes(axes)
     if len(axes)!=len(texts):raise ValueError("Each panel needs exactly one caption")
     figure.canvas.draw()
