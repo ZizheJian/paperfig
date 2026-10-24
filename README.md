@@ -1,6 +1,8 @@
 # paperfig
 
-`paperfig` provides deterministic Matplotlib layouts for publication figures. It keeps the final paper width and font size fixed, lays out panel rows and grids in physical points, renders once to measure the actual text, and crops only the vertical whitespace when exporting a 300 dpi PNG.
+`paperfig` provides deterministic Matplotlib layouts for publication figures. It keeps the final paper width and font size fixed, lays out panel rows and grids in physical points, renders to measure the actual text, and crops only the vertical whitespace when exporting a 300 dpi PNG.
+
+The library handles publication geometry. A project still owns its data loading, plotting commands, colors, labels, and any figure-specific adjustments.
 
 ## Conventions
 
@@ -39,19 +41,77 @@ Clone a parent project and its pinned helper with:
 git clone --recurse-submodules <parent-repository>
 ```
 
-## Example
+If the parent repository has already been cloned without submodules, initialize them with:
 
-```python
-import matplotlib.pyplot as plt
-from paperfig import PaperFigureSpec,layout_panel_row,panel_aspect_ratios,save_paper_png_vertical_crop
-
-spec=PaperFigureSpec.column(1)
-figure,axes=plt.subplots(1,2,figsize=spec.size_in,dpi=spec.dpi)
-layout_panel_row(figure,axes,panel_aspect_ratios(2,1),bottom_pt=30,panel_gap_pt=9,left_edge_gap_pt=3,right_edge_gap_pt=3)
-save_paper_png_vertical_crop(figure,"figure.png",spec,edge_gap_pt=3)
+```bash
+git submodule update --init --recursive
 ```
 
-See [`examples/fdwz_tree_ablation`](examples/fdwz_tree_ablation) for the data and code that reproduce a two-slot plus one-slot panel figure from the MRCZ paper.
+## Workflow
+
+The intended order is:
+
+1. Call `apply_paper_style` before creating the figure.
+2. Select the final width with `PaperFigureSpec.column` or `PaperFigureSpec.text`.
+3. Create the square provisional canvas and draw all data, ticks, and labels.
+4. Call `style_plot_axis` for the shared tick, label, and spine geometry.
+5. Call `layout_panel_row` or `layout_panel_grid` after the visible text exists. The layout functions measure that rendered text before placing the plot areas.
+6. Add legends with `legend_above` after the plot areas have their final size, so its point-based gap is computed from the final geometry.
+7. Align shared rows such as x-axis labels and panel captions.
+8. Export with `save_paper_png_vertical_crop`. This keeps the exact paper width and removes only unused space above and below the content.
+
+The provisional height is only workspace for Matplotlib. The exported height is determined by the measured content, while the width, font size, and 300 dpi resolution remain fixed.
+
+## Minimal example
+
+```python
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from paperfig import PaperFigureSpec,add_panel_captions,align_xlabels,apply_paper_style,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+
+apply_paper_style()
+spec=PaperFigureSpec.column()
+figure,axes=plt.subplots(1,2,figsize=spec.size_in,dpi=spec.dpi)
+for axis in axes:
+    axis.plot([0,1,2],[0,1,0],label="Series")
+    axis.set_xlabel("Input")
+    axis.set_ylabel("Output")
+    style_plot_axis(axis)
+layout_panel_row(figure,axes,panel_aspect_ratios(1,1),bottom_pt=28,panel_gap_pt=8,left_edge_gap_pt=3,right_edge_gap_pt=3)
+legend_above(axes[0],ncol=1,frameon=False,**legend_spacing_kwargs(8))
+align_xlabels(figure,axes)
+add_panel_captions(figure,axes,["(a) First","(b) Second"])
+save_paper_png_vertical_crop(figure,"figure.png",spec,edge_gap_pt=3)
+plt.close(figure)
+```
+
+The same code is available as the runnable [`examples/minimal`](examples/minimal) template. See [`examples/fdwz_tree_ablation`](examples/fdwz_tree_ablation) for a complete data-driven figure from the MRCZ paper.
+
+## Choosing the layout helpers
+
+| Helper | Use it for |
+| --- | --- |
+| `PaperFigureSpec.column(...)` | A figure measured from the 252 pt single-column width. |
+| `PaperFigureSpec.text(...)` | A figure measured from the 516 pt full-text width. Use `width_fraction` for figures such as `5/6` of the text width. |
+| `panel_aspect_ratios(...)` | Converting integer panel spans into plot-area aspect ratios based on the default `sqrt(2)` slot. Pass explicit ratios when a figure needs its own geometry. |
+| `style_plot_axis(...)` | Applying physical tick-to-axis and label-to-tick gaps after scales and labels have been configured. Logarithmic x axes automatically use their separate default tick gap. |
+| `layout_panel_row(...)` | Placing one row of panels while accounting for visible y-axis decorations and protruding edge ticks. |
+| `layout_panel_grid(...)` | Placing a rectangular grid with measured gaps between the visible content of adjacent rows. |
+| `legend_above(...)` | Placing a legend at a physical distance above one plot area. |
+| `legend_spacing_kwargs(...)` | Expressing legend handle width, handle-to-text gap, and column gap in points. |
+| `align_xlabels(...)` | Putting the x-axis labels of neighboring panels on one common row. |
+| `add_panel_captions(...)` | Putting panel captions on one common row below x-axis labels or tick labels. |
+| `add_shared_xlabel(...)` | Adding one x-axis label shared by several panels. |
+| `save_paper_png_vertical_crop(...)` | Exporting a fixed-width 300 dpi PNG while cropping only vertical whitespace. |
+
+All distance arguments ending in `_pt` are physical points in the final figure. Plot-area aspect ratios describe only the rectangle inside the axes spines. Tick labels, axis labels, legends, and captions do not count toward that ratio.
+
+## Shared defaults and figure-specific adjustments
+
+Use the exported defaults for ordinary figures. Override a value in the project script when the data or labels create a special case. For example, a dense legend may need a smaller column gap, and a panel with two-line tick labels may need its caption row moved independently. Such adjustments belong in that figure's script unless they apply consistently across projects.
+
+`paperfig` deliberately does not select tick locations, rewrite labels, choose colors, or infer semantic panel groupings. Keeping those choices in the parent project makes the shared geometry predictable.
 
 Run the geometry checks with:
 

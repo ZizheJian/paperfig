@@ -50,5 +50,6 @@ def save_paper_png_vertical_crop(figure,path,spec,edge_gap_pt=0):
     edge_gap_px=edge_gap_pt*spec.dpi/MPL_POINTS_PER_INCH
     bottom_px=max(0,math.floor(content_bbox.y0-edge_gap_px))
     top_px=min(figure.bbox.y1,math.ceil(content_bbox.y1+edge_gap_px))
+    # Preserve the full paper width so LaTeX does not rescale the configured text size.
     crop_bbox=Bbox.from_extents(0,bottom_px/spec.dpi,figure.get_figwidth(),top_px/spec.dpi)
     figure.savefig(path,format="png",dpi=spec.dpi,bbox_inches=crop_bbox,pad_inches=0,facecolor="white")

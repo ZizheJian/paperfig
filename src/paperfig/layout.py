@@ -10,6 +10,7 @@ def paper_subplots(spec,nrows=1,ncols=1,left_pt=0,right_pt=0,bottom_pt=0,top_pt=
     if width_ratios is not None:gridspec_kw["width_ratios"]=width_ratios
     if height_ratios is not None:gridspec_kw["height_ratios"]=height_ratios
     figure,axes=plt.subplots(nrows,ncols,figsize=spec.size_in,dpi=spec.dpi,squeeze=squeeze,gridspec_kw=gridspec_kw)
+    # Matplotlib expresses wspace and hspace as fractions of an average axes size.
     wspace=column_gap_pt/(axes_width_pt/ncols) if ncols>1 else 0
     hspace=row_gap_pt/(axes_height_pt/nrows) if nrows>1 else 0
     figure.subplots_adjust(left=left_pt/spec.width_pt,right=1-right_pt/spec.width_pt,bottom=bottom_pt/spec.height_pt,top=1-top_pt/spec.height_pt,wspace=wspace,hspace=hspace)
@@ -37,6 +38,7 @@ def _visible_legend_row_gap_pt(legend):
     return min(gaps)*MPL_POINTS_PER_INCH/legend.figure.dpi
 
 def set_legend_row_gap(legend,row_gap_pt=DEFAULT_LEGEND_ROW_GAP_PT):
+    # labelspacing is font-relative, so correct it from the rendered text bounds.
     visible_gap_pt=_visible_legend_row_gap_pt(legend)
     if visible_gap_pt is None:return legend
     correction_pt=row_gap_pt-visible_gap_pt
@@ -80,6 +82,7 @@ def layout_panel_row(figure,axes,aspect_ratios,bottom_pt,panel_gap_pt,left_edge_
     if len(axes)!=len(aspect_ratios):raise ValueError("Each panel needs exactly one plot-area aspect ratio")
     figure_width_pt=figure.get_figwidth()*MPL_POINTS_PER_INCH
     figure_height_pt=figure.get_figheight()*MPL_POINTS_PER_INCH
+    # Re-measure because moving axes can change which edge tick labels are visible.
     for _ in range(3):
         figure.canvas.draw()
         renderer=figure.canvas.get_renderer()
@@ -116,6 +119,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
     if len(rows[0])!=len(aspect_ratios):raise ValueError("Each grid column needs exactly one plot-area aspect ratio")
     figure_width_pt=figure.get_figwidth()*MPL_POINTS_PER_INCH
     figure_height_pt=figure.get_figheight()*MPL_POINTS_PER_INCH
+    # First solve the shared column geometry from every row's rendered decorations.
     for _ in range(3):
         figure.canvas.draw()
         renderer=figure.canvas.get_renderer()
@@ -148,6 +152,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
             if column<len(rows[0])-1:left_pt+=column_gap_pt
     figure.canvas.draw()
     renderer=figure.canvas.get_renderer()
+    # Then stack rows using the visible content below each plot area.
     below_heights_pt=[]
     for row in rows:
         row_height_pt=0
