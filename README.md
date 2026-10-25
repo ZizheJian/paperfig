@@ -68,7 +68,7 @@ The provisional height is only workspace for Matplotlib. The exported height is 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from paperfig import PaperFigureSpec,add_panel_captions,align_xlabels,apply_paper_style,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
+from paperfig import PANEL_GAP_WITH_YLABEL_PT,PaperFigureSpec,add_panel_captions,align_xlabels,apply_paper_style,layout_panel_row,legend_above,legend_spacing_kwargs,panel_aspect_ratios,save_paper_png_vertical_crop,style_plot_axis
 
 apply_paper_style()
 spec=PaperFigureSpec.column()
@@ -78,7 +78,7 @@ for axis in axes:
     axis.set_xlabel("Input")
     axis.set_ylabel("Output")
     style_plot_axis(axis)
-layout_panel_row(figure,axes,panel_aspect_ratios(1,1),bottom_pt=28,panel_gap_pt=8,left_edge_gap_pt=3,right_edge_gap_pt=3)
+layout_panel_row(figure,axes,panel_aspect_ratios(1,1),bottom_pt=28,panel_gap_pt=PANEL_GAP_WITH_YLABEL_PT,left_edge_gap_pt=3,right_edge_gap_pt=3)
 legend_above(axes[0],ncol=1,frameon=False,**legend_spacing_kwargs(8))
 align_xlabels(figure,axes)
 add_panel_captions(figure,axes,["(a) First","(b) Second"])
@@ -106,6 +106,8 @@ The same code is available as the runnable [`examples/minimal`](examples/minimal
 | `save_paper_png_vertical_crop(...)` | Exporting a fixed-width 300 dpi PNG while cropping only vertical whitespace. |
 
 All distance arguments ending in `_pt` are physical points in the final figure. Plot-area aspect ratios describe only the rectangle inside the axes spines. Tick labels, axis labels, legends, and captions do not count toward that ratio.
+
+Choose the horizontal panel gap from the left-side decoration of the following panel: `PANEL_GAP_WITH_YLABEL_PT` is 8 pt when it has a y-axis label and tick labels, `PANEL_GAP_WITH_YTICKS_PT` is 4 pt when it has tick labels only, and `PANEL_GAP_WITHOUT_Y_DECORATION_PT` is 2 pt when it has neither. The layout helpers measure the decoration width separately, so these constants describe the visible clearance from the preceding plot boundary to that decoration.
 
 ## Shared defaults and figure-specific adjustments
 
