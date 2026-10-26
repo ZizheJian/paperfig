@@ -153,6 +153,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
     figure.canvas.draw()
     renderer=figure.canvas.get_renderer()
     # Then stack rows using the visible content below each plot area.
+    # Measure every row independently because multiline panel captions extend farther below their plot areas.
     below_heights_pt=[]
     for row in rows:
         row_height_pt=0
@@ -163,6 +164,7 @@ def layout_panel_grid(figure,axes,aspect_ratios,bottom_pt,column_gap_pt,row_cont
             bottom=min((bbox.y0 for bbox in candidates),default=axis_bbox.y0)
             row_height_pt=max(row_height_pt,(axis_bbox.y0-bottom)*MPL_POINTS_PER_INCH/figure.dpi)
         below_heights_pt.append(row_height_pt)
+    # Keep the visible content gap fixed; plot-to-plot spacing then grows only for rows with taller captions.
     row_bottoms_pt=[0.0]*len(rows)
     row_bottoms_pt[-1]=bottom_pt
     for row_index in range(len(rows)-2,-1,-1):row_bottoms_pt[row_index]=row_bottoms_pt[row_index+1]+plot_height_pt+row_content_gap_pt+below_heights_pt[row_index]

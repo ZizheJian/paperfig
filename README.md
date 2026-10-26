@@ -107,6 +107,8 @@ The same code is available as the runnable [`examples/minimal`](examples/minimal
 
 All distance arguments ending in `_pt` are physical points in the final figure. Plot-area aspect ratios describe only the rectangle inside the axes spines. Tick labels, axis labels, legends, and captions do not count toward that ratio.
 
+For a multi-row grid, `row_content_gap_pt` is the visible clearance from the bottom of one row's tick labels or x-axis label to the next row's plot boundary. Each row is measured independently. A row with a two-line panel caption therefore receives more plot-to-plot space than a row with a one-line caption while both retain the same visible clearance. Put grid panel captions in the axes' x-axis labels before calling `layout_panel_grid(...)` so their rendered heights are included in this measurement.
+
 Choose the horizontal panel gap from the left-side decoration of the following panel: `PANEL_GAP_WITH_YLABEL_PT` is 8 pt when it has a y-axis label and tick labels, `PANEL_GAP_WITH_YTICKS_PT` is 4 pt when it has tick labels only, and `PANEL_GAP_WITHOUT_Y_DECORATION_PT` is 2 pt when it has neither. The layout helpers measure the decoration width separately, so these constants describe the visible clearance from the preceding plot boundary to that decoration.
 
 ## Shared defaults and figure-specific adjustments

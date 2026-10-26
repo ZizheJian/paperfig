@@ -129,4 +129,30 @@ class GeometryTest(unittest.TestCase):
         self.assertAlmostEqual(content_gap_pt,6,places=10)
         plt.close(figure)
 
+    def test_grid_layout_measures_each_caption_row_separately(self):
+        apply_paper_style()
+        spec=PaperFigureSpec.column(1)
+        figure,axes=plt.subplots(3,2,figsize=spec.size_in,dpi=spec.dpi)
+        captions=(("(a) Two-line caption\nfirst row","(b) Two-line caption\nfirst row"),("(c) One line","(d) One line"),("(e) Last row","(f) Last row"))
+        for row in range(3):
+            for column in range(2):
+                axis=axes[row,column]
+                axis.plot([0,1],[0,1])
+                axis.set_xlabel(captions[row][column])
+                style_plot_axis(axis,x_label_pad=1)
+        layout_panel_grid(figure,axes,panel_aspect_ratios(1,1),bottom_pt=30,column_gap_pt=PANEL_GAP_WITH_YTICKS_PT,row_content_gap_pt=6,left_edge_gap_pt=12,right_edge_gap_pt=3)
+        figure.canvas.draw()
+        renderer=figure.canvas.get_renderer()
+        below_heights=[]
+        for row in range(2):
+            plot_bottom=min(axis.get_window_extent(renderer).y0 for axis in axes[row])
+            caption_bottom=min(axis.xaxis.label.get_window_extent(renderer).y0 for axis in axes[row])
+            next_plot_top=max(axis.get_window_extent(renderer).y1 for axis in axes[row+1])
+            below_height=(plot_bottom-caption_bottom)*MPL_POINTS_PER_INCH/figure.dpi
+            content_gap=(caption_bottom-next_plot_top)*MPL_POINTS_PER_INCH/figure.dpi
+            below_heights.append(below_height)
+            self.assertAlmostEqual(content_gap,6,places=10)
+        self.assertGreater(below_heights[0],below_heights[1])
+        plt.close(figure)
+
 if __name__=="__main__":unittest.main()
